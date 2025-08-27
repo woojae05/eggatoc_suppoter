@@ -1,4 +1,4 @@
-'use client'
+'use client';
 
 import {
   Card,
@@ -9,15 +9,15 @@ import {
   Button,
   Icon,
   useColorModeValue,
-} from '@chakra-ui/react'
-import { 
-  FiUserPlus, 
-  FiFileText, 
-  FiCalendarPlus, 
+} from '@chakra-ui/react';
+import {
+  FiUserPlus,
+  FiFileText,
+  FiCalendar,
   FiSettings,
   FiMessageSquare,
-  FiDownload
-} from 'react-icons/fi'
+  FiDownload,
+} from 'react-icons/fi';
 
 const quickActions = [
   {
@@ -35,7 +35,7 @@ const quickActions = [
   {
     id: '3',
     label: '일정 등록',
-    icon: FiCalendarPlus,
+    icon: FiCalendar,
     color: 'purple.500',
   },
   {
@@ -56,10 +56,10 @@ const quickActions = [
     icon: FiSettings,
     color: 'gray.500',
   },
-]
+];
 
 export default function QuickActions() {
-  const cardBg = useColorModeValue('white', 'gray.800')
+  const cardBg = useColorModeValue('white', 'gray.800');
 
   return (
     <Card bg={cardBg} shadow="sm" borderRadius="xl">
@@ -86,12 +86,7 @@ export default function QuickActions() {
                 boxShadow: 'sm',
               }}
             >
-              <Icon
-                as={action.icon}
-                boxSize={6}
-                color={action.color}
-                mb={2}
-              />
+              <Icon as={action.icon} boxSize={6} color={action.color} mb={2} />
               <Text
                 fontSize="xs"
                 fontWeight="medium"
@@ -106,5 +101,5 @@ export default function QuickActions() {
         </SimpleGrid>
       </CardBody>
     </Card>
-  )
+  );
 }
