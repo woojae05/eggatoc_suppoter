@@ -1,23 +1,7 @@
 'use client';
 
-import {
-  Box,
-  Heading,
-  Text,
-  SimpleGrid,
-  VStack,
-  HStack,
-} from '@chakra-ui/react';
+import { Box, Heading, Text, VStack } from '@chakra-ui/react';
 import Layout from '@/components/layout/Layout';
-import StatsCard from '@/components/dashboard/StatsCard';
-import RecentActivity from '@/components/dashboard/RecentActivity';
-import QuickActions from '@/components/dashboard/QuickActions';
-import {
-  FiUsers,
-  FiFileText,
-  FiCalendar,
-  FiMessageSquare,
-} from 'react-icons/fi';
 import Image from 'next/image';
 
 export default function Dashboard() {

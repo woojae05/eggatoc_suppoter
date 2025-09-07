@@ -69,6 +69,51 @@ class WebhookService {
     }
   }
 
+  async sendCleaningMessage(room: RoomData): Promise<WebhookResponse> {
+    if (!this.baseUrl) {
+      throw new Error('웹훅 URL이 설정되지 않았습니다.');
+    }
+
+    const payload: WebhookPayload = {
+      event: 'room_cleaning_notice',
+      timestamp: new Date().toISOString(),
+      room: room,
+      message: `${room.name} (${room.type}) 객실의 청소 안내 메시지가 발송되었습니다.`,
+    };
+
+    try {
+      const response = await fetch(this.baseUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+          'x-make-apikey': '1234',
+        },
+        body: JSON.stringify(payload),
+      });
+
+      console.log('웹훅 응답:', response.ok);
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      return {
+        success: true,
+        message: '청소 안내 웹훅 전송이 완료되었습니다.',
+      };
+    } catch (error) {
+      console.error('웹훅 전송 실패:', error);
+      return {
+        success: false,
+        error:
+          error instanceof Error
+            ? error.message
+            : '알 수 없는 오류가 발생했습니다.',
+      };
+    }
+  }
+
   async testWebhook(): Promise<WebhookResponse> {
     if (!this.baseUrl) {
       return {

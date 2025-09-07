@@ -14,9 +14,44 @@ import {
   Badge,
 } from '@chakra-ui/react';
 import Layout from '@/components/layout/Layout';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { rooms } from '@/model/rooms';
 import { webhookService } from '@/services/webhook';
+
+// LocalStorage에서 오늘 날짜 키 생성
+const getTodayKey = () => {
+  const today = new Date();
+  return `checkin-sent-${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+};
+
+// LocalStorage에서 오늘 전송된 방 목록 가져오기
+const getTodaySentRooms = (): Set<number> => {
+  if (typeof window === 'undefined') return new Set();
+  
+  const todayKey = getTodayKey();
+  const stored = localStorage.getItem(todayKey);
+  
+  if (stored) {
+    try {
+      const roomNumbers = JSON.parse(stored);
+      return new Set(roomNumbers);
+    } catch (error) {
+      console.error('LocalStorage 데이터 파싱 오류:', error);
+      return new Set();
+    }
+  }
+  
+  return new Set();
+};
+
+// LocalStorage에 오늘 전송된 방 목록 저장
+const saveTodaySentRooms = (sentRooms: Set<number>) => {
+  if (typeof window === 'undefined') return;
+  
+  const todayKey = getTodayKey();
+  const roomNumbers = Array.from(sentRooms);
+  localStorage.setItem(todayKey, JSON.stringify(roomNumbers));
+};
 
 export default function CheckInMessagePage() {
   const [selectedButton, setSelectedButton] = useState<number | null>(null);
@@ -24,8 +59,27 @@ export default function CheckInMessagePage() {
   const [sentButtons, setSentButtons] = useState<Set<number>>(new Set());
   const toast = useToast();
 
+  // 컴포넌트 마운트 시 오늘 전송된 방 목록 로드
+  useEffect(() => {
+    const todaySentRooms = getTodaySentRooms();
+    setSentButtons(todaySentRooms);
+  }, []);
+
   const handleButtonClick = async (buttonNumber: number) => {
     const room = rooms[buttonNumber as keyof typeof rooms];
+
+    // 이미 오늘 전송된 방인지 확인
+    if (sentButtons.has(buttonNumber)) {
+      toast({
+        title: '이미 전송 완료',
+        description: `${buttonNumber}번 객실은 오늘 이미 메시지가 전송되었습니다.`,
+        status: 'warning',
+        duration: 3000,
+        isClosable: true,
+        position: 'top',
+      });
+      return;
+    }
 
     // 로딩 상태 시작
     setLoadingButtons((prev) => new Set(prev).add(buttonNumber));
@@ -42,8 +96,10 @@ export default function CheckInMessagePage() {
       console.log('웹훅 응답:', response);
 
       if (response.success) {
-        // 성공 시 전송 완료 상태 추가
-        setSentButtons((prev) => new Set(prev).add(buttonNumber));
+        // 성공 시 전송 완료 상태 추가 및 LocalStorage 저장
+        const newSentButtons = new Set(sentButtons).add(buttonNumber);
+        setSentButtons(newSentButtons);
+        saveTodaySentRooms(newSentButtons);
 
         toast({
           title: `${buttonNumber}번 객실 메시지 전송 완료`,
@@ -118,15 +174,16 @@ export default function CheckInMessagePage() {
             isLoading={isLoading}
             loadingText=""
             spinner={<Spinner size="lg" color="white" />}
-            isDisabled={isLoading}
+            isDisabled={isLoading || isSent}
             _hover={{
               bg: isSent
-                ? 'green.600'
+                ? 'green.500'
                 : selectedButton === i
                 ? 'primary.800'
                 : 'primary.50',
-              transform: !isLoading ? 'translateY(-2px)' : 'none',
-              boxShadow: !isLoading ? 'lg' : 'none',
+              transform: !isLoading && !isSent ? 'translateY(-2px)' : 'none',
+              boxShadow: !isLoading && !isSent ? 'lg' : 'none',
+              cursor: isSent ? 'not-allowed' : 'pointer',
             }}
             _active={{
               transform: 'translateY(0)',
@@ -233,30 +290,6 @@ export default function CheckInMessagePage() {
           </CardBody>
         </Card>
 
-        {/* Selected Button Info
-        {selectedButton && (
-          <Card bg="primary.50" borderColor="primary.200" borderWidth="1px">
-            <CardBody>
-              <VStack spacing={2}>
-                <Text 
-                  fontSize={{ base: 'lg', md: 'xl' }} 
-                  fontWeight="semibold" 
-                  color="primary.900"
-                >
-                  선택된 메시지: {selectedButton}번
-                </Text>
-                <Text 
-                  color="gray.600" 
-                  textAlign="center"
-                  fontSize={{ base: 'sm', md: 'md' }}
-                >
-                  체크인 메시지 {selectedButton}번이 활성화되었습니다.
-                </Text>
-              </VStack>
-            </CardBody>
-          </Card>
-        )} */}
-
         {/* Instructions */}
         <Card
           bg="background.50"
@@ -277,7 +310,10 @@ export default function CheckInMessagePage() {
                   • 원하는 객실 버튼을 클릭하여 체크인 메시지를 발송하세요.
                 </Text>
                 <Text fontSize={{ base: 'sm', md: 'md' }} color="gray.600">
-                  • 발송된 버튼은 진한 색상으로 표시됩니다
+                  • 각 객실은 하루에 한 번만 메시지를 발송할 수 있습니다.
+                </Text>
+                <Text fontSize={{ base: 'sm', md: 'md' }} color="gray.600">
+                  • 발송된 버튼은 녹색으로 표시되며 비활성화됩니다.
                 </Text>
               </VStack>
             </VStack>

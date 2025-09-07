@@ -15,12 +15,13 @@ import {
   DrawerCloseButton,
   useBreakpointValue,
 } from '@chakra-ui/react';
-import { FaUserCheck } from 'react-icons/fa';
+import { FaUserCheck, FaBroom } from 'react-icons/fa';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 
 const sidebarItems = [
   { icon: FaUserCheck, label: '체크인 안내 메시지', href: '/check-in-message' },
+  { icon: FaBroom, label: '오늘 객실청소 안내', href: '/room-cleaning' },
 ];
 
 interface SidebarProps {
