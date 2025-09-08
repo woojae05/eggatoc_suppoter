@@ -196,7 +196,11 @@ function analyzeCleaningTasks(
     }
 
     // 2. 핫텁 사용 객실 (오늘 추가 옵션이 있는 객실)
-    if (todayGuest && todayGuest.hasAdditionalOptions) {
+    if (
+      yesterdayGuest &&
+      yesterdayGuest.hasAdditionalOptions &&
+      !isSameGuest(yesterdayGuest, todayGuest)
+    ) {
       hotTubRooms.push(cabinNumber);
     }
 
@@ -408,23 +412,25 @@ export default function RoomCleaningPage() {
           </Text>
         </Box>
         {/* Refresh Button */}
-        <Box textAlign="center">
-          <Button
-            colorScheme="blue"
-            onClick={fetchCleaningData}
-            isLoading={loading}
-            loadingText="데이터 로드 중..."
-            size="lg"
-          >
-            데이터 새로고침
-          </Button>
-        </Box>
+        <HStack>
+          <Box textAlign="center">
+            <Button
+              colorScheme="blue"
+              onClick={fetchCleaningData}
+              isLoading={loading}
+              loadingText="데이터 로드 중..."
+              size="lg"
+            >
+              데이터 새로고침
+            </Button>
+          </Box>
 
-        <VStack align="center" spacing={4}>
-          <Button colorScheme="blue" leftIcon={<FaShare />} onClick={onOpen}>
-            공유용 청소상황 보기
-          </Button>
-        </VStack>
+          <VStack align="center" spacing={4}>
+            <Button colorScheme="blue" leftIcon={<FaShare />} onClick={onOpen}>
+              공유용 청소상황 보기
+            </Button>
+          </VStack>
+        </HStack>
         {/* Error Alert */}
         {error && (
           <Alert status="error" borderRadius="md">
@@ -448,65 +454,6 @@ export default function RoomCleaningPage() {
         {/* Cleaning Data Table */}
         {cleaningData && !loading && (
           <>
-            {/* Summary Cards */}
-            <VStack spacing={4}>
-              <HStack spacing={4} flexWrap="wrap" justify="center">
-                <Card minW="200px">
-                  <CardBody textAlign="center">
-                    <Text fontSize="sm" color="gray.600">
-                      청소할 객실
-                    </Text>
-                    <Text fontSize="2xl" fontWeight="bold" color="red.500">
-                      {cleaningData.cleaningRooms.length > 0
-                        ? cleaningData.cleaningRooms.join(', ')
-                        : '없음'}
-                    </Text>
-                  </CardBody>
-                </Card>
-
-                <Card minW="200px">
-                  <CardBody textAlign="center">
-                    <Text fontSize="sm" color="gray.600">
-                      핫텁 사용
-                    </Text>
-                    <Text fontSize="2xl" fontWeight="bold" color="purple.500">
-                      {cleaningData.hotTubRooms.length > 0
-                        ? cleaningData.hotTubRooms.join(', ')
-                        : '없음'}
-                    </Text>
-                  </CardBody>
-                </Card>
-              </HStack>
-
-              <HStack spacing={4} flexWrap="wrap" justify="center">
-                <Card minW="200px">
-                  <CardBody textAlign="center">
-                    <Text fontSize="sm" color="gray.600">
-                      연박 고객
-                    </Text>
-                    <Text fontSize="2xl" fontWeight="bold" color="green.500">
-                      {cleaningData.consecutiveStayRooms.length > 0
-                        ? cleaningData.consecutiveStayRooms.join(', ')
-                        : '없음'}
-                    </Text>
-                  </CardBody>
-                </Card>
-
-                <Card minW="200px">
-                  <CardBody textAlign="center">
-                    <Text fontSize="sm" color="gray.600">
-                      내일 예상 객실
-                    </Text>
-                    <Text fontSize="2xl" fontWeight="bold" color="orange.500">
-                      {cleaningData.tomorrowExpectedRooms.length > 0
-                        ? cleaningData.tomorrowExpectedRooms.join(', ')
-                        : '없음'}
-                    </Text>
-                  </CardBody>
-                </Card>
-              </HStack>
-            </VStack>
-
             {/* Detailed Table */}
             <Card>
               <CardHeader>
