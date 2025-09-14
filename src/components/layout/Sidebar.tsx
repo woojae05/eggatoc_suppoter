@@ -15,13 +15,23 @@ import {
   DrawerCloseButton,
   useBreakpointValue,
 } from '@chakra-ui/react';
-import { FaUserCheck, FaBroom, FaLeaf, FaCoffee, FaCalendarDay } from 'react-icons/fa';
+import {
+  FaUserCheck,
+  FaBroom,
+  FaLeaf,
+  FaCoffee,
+  FaCalendarDay,
+} from 'react-icons/fa';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 
 const sidebarItems = [
   { icon: FaCalendarDay, label: '오늘 현황', href: '/today-status' },
-  { icon: FaUserCheck, label: '체크인 안내 메시지', href: '/check-in-message' },
+  {
+    icon: FaUserCheck,
+    label: '레이트 체크인 안내 메시지',
+    href: '/check-in-message',
+  },
   { icon: FaBroom, label: '오늘 객실청소 안내', href: '/room-cleaning' },
   { icon: FaLeaf, label: '요가, 조식 안내', href: '/wellness-breakfast' },
 ];

@@ -372,7 +372,7 @@ export default function CheckInMessagePage() {
         {/* Page Header */}
         <Box textAlign="center">
           <Heading size={{ base: 'lg', md: 'xl' }} color="primary.900" mb={4}>
-            체크인 안내 메시지
+            레이트 체크인 안내 메시지
           </Heading>
           <Text
             color="gray.600"
@@ -380,7 +380,7 @@ export default function CheckInMessagePage() {
             maxW="600px"
             mx="auto"
           >
-            객실별 체크인 메시지를 발송하여 게스트에게 안내하세요.
+            객실별 레이트 체크인 메시지를 발송하여 게스트에게 안내하세요.
           </Text>
         </Box>
 
@@ -392,7 +392,7 @@ export default function CheckInMessagePage() {
                 객실 선택
               </Heading>
               <Text fontSize="sm" color="gray.600" textAlign="center">
-                체크인 메시지를 발송할 객실을 선택해주세요
+                레이트 체크인 메시지를 발송할 객실을 선택해주세요
               </Text>
               {apiLoading && (
                 <Badge colorScheme="yellow" variant="subtle" px={3} py={1}>
