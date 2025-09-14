@@ -54,6 +54,13 @@ const cabinNumberMap = {
   '에가톳캐빈- 반려견 동반 (only stay)': 'PET',
 };
 
+const formatApiDate = (date: Date) => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
 interface CleaningAnalysisResult {
   cleaningRooms: string[];
   hotTubRooms: string[];
@@ -75,11 +82,9 @@ function extractDayData(weekData: any, targetDate: string) {
   tomorrow.setDate(today.getDate() + 1);
 
   // 날짜를 YYYY-MM-DD 형식으로 변환
-  const formatDate = (date: Date) => date.toISOString().split('T')[0];
-
-  const yesterdayStr = formatDate(yesterday);
-  const todayStr = formatDate(today);
-  const tomorrowStr = formatDate(tomorrow);
+  const yesterdayStr = formatApiDate(yesterday);
+  const todayStr = formatApiDate(today);
+  const tomorrowStr = formatApiDate(tomorrow);
 
   // 특정 날짜의 데이터만 필터링하는 함수
   function filterDataByDate(dateStr: string) {
@@ -294,8 +299,6 @@ export default function RoomCleaningPage() {
       startDate.setDate(today.getDate() - 3); // 3일 전부터
       const endDate = new Date(today);
       endDate.setDate(today.getDate() + 3); // 3일 후까지
-
-      const formatApiDate = (date: Date) => date.toISOString().split('T')[0];
 
       // 환경변수에서 API 설정 가져오기
       const baseUrl = process.env.NEXT_PUBLIC_PMS_API_BASE_URL;

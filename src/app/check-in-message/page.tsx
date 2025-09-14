@@ -94,10 +94,17 @@ export default function CheckInMessagePage() {
       setApiLoading(true);
       try {
         const today = new Date();
-        const dateString = today.toISOString().split('T')[0];
+        const year = today.getFullYear();
+        const month = String(today.getMonth() + 1).padStart(2, '0');
+        const day = String(today.getDate()).padStart(2, '0');
+        const dateString = `${year}-${month}-${day}`;
+
         const nextDay = new Date(today);
         nextDay.setDate(nextDay.getDate() + 1);
-        const endDateString = nextDay.toISOString().split('T')[0];
+        const nextYear = nextDay.getFullYear();
+        const nextMonth = String(nextDay.getMonth() + 1).padStart(2, '0');
+        const nextDayOfMonth = String(nextDay.getDate()).padStart(2, '0');
+        const endDateString = `${nextYear}-${nextMonth}-${nextDayOfMonth}`;
 
         const data = await fetchLodgmentData(dateString, endDateString);
         const roomCustomerInfo = getRoomCustomerInfoForCheckin(

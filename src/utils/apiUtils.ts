@@ -156,10 +156,6 @@ export const transformApiDataToTableData = (
       room.id.toString(),
       date
     );
-    console.log(
-      `Room ${room.id} (${room.name}):`,
-      reservation?.nBookingDetails?.customFormInputs
-    );
 
     return {
       id: room.id,
@@ -200,18 +196,24 @@ export const transformApiDataToTableData = (
 export const getRoomCustomerInfoForCheckin = (
   data: LodgmentData,
   date: string
-): Record<number, { 
-  customer: string; 
-  phone: string; 
-  customInout: string;
-  roomName: string;
-}> => {
-  const roomInfo: Record<number, { 
-    customer: string; 
-    phone: string; 
+): Record<
+  number,
+  {
+    customer: string;
+    phone: string;
     customInout: string;
     roomName: string;
-  }> = {};
+  }
+> => {
+  const roomInfo: Record<
+    number,
+    {
+      customer: string;
+      phone: string;
+      customInout: string;
+      roomName: string;
+    }
+  > = {};
 
   const roomMappings = [
     { id: 1, name: 'camino' },
@@ -227,18 +229,30 @@ export const getRoomCustomerInfoForCheckin = (
     { id: 11, name: 'star' },
   ];
 
-  roomMappings.forEach(room => {
-    const customerInfo = getCustomerInfoByRoomNumber(data, room.id.toString(), date);
-    const reservation = getReservationByRoomNumber(data, room.id.toString(), date);
-    
+  roomMappings.forEach((room) => {
+    const customerInfo = getCustomerInfoByRoomNumber(
+      data,
+      room.id.toString(),
+      date
+    );
+    const reservation = getReservationByRoomNumber(
+      data,
+      room.id.toString(),
+      date
+    );
+
     // customInout 정보 생성
     let customInout = '';
-    if (reservation?.nBookingDetails?.customFormInputs && reservation.nBookingDetails.customFormInputs.length > 0) {
+    if (
+      reservation?.nBookingDetails?.customFormInputs &&
+      reservation.nBookingDetails.customFormInputs.length > 0
+    ) {
       customInout = reservation.nBookingDetails.customFormInputs
-        .filter((input) =>
-          input.value &&
-          input.value.trim() !== '' &&
-          !input.title.includes('체크인')
+        .filter(
+          (input) =>
+            input.value &&
+            input.value.trim() !== '' &&
+            !input.title.includes('체크인')
         )
         .map((input) => {
           let title = input.title;
@@ -255,7 +269,7 @@ export const getRoomCustomerInfoForCheckin = (
       customer: customerInfo?.name || '',
       phone: customerInfo?.phone || '',
       customInout: customInout,
-      roomName: room.name
+      roomName: room.name,
     };
   });
 

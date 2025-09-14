@@ -60,14 +60,20 @@ export default function TodayStatusPage() {
       setError(null);
 
       try {
-        const dateString = currentDate.toISOString().split('T')[0];
+        const year = currentDate.getFullYear();
+        const month = String(currentDate.getMonth() + 1).padStart(2, '0');
+        const day = String(currentDate.getDate()).padStart(2, '0');
+        const dateString = `${year}-${month}-${day}`;
+
         const nextDay = new Date(currentDate);
         nextDay.setDate(nextDay.getDate() + 1);
-        const endDateString = nextDay.toISOString().split('T')[0];
+        const nextYear = nextDay.getFullYear();
+        const nextMonth = String(nextDay.getMonth() + 1).padStart(2, '0');
+        const nextDayOfMonth = String(nextDay.getDate()).padStart(2, '0');
+        const endDateString = `${nextYear}-${nextMonth}-${nextDayOfMonth}`;
 
         const data = await fetchLodgmentData(dateString, endDateString);
         setApiData(data);
-        console.log('Fetched API data:', data);
         // Transform API data to table format
         const tableData = transformApiDataToTableData(data, dateString);
         setReservationData(tableData);
@@ -90,13 +96,6 @@ export default function TodayStatusPage() {
   const evenRowBg = useColorModeValue('white', 'gray.800');
   const oddRowBg = useColorModeValue('gray.25', 'gray.750');
 
-  const renderValue = (value: string | boolean) => {
-    if (value === true) {
-      return <Icon as={CheckIcon} color="green.500" fontSize="lg" />;
-    }
-    return value || '';
-  };
-
   // Navigation functions
   const goToPreviousDay = () => {
     const previousDay = new Date(currentDate);
@@ -117,7 +116,9 @@ export default function TodayStatusPage() {
   const getCurrentDateString = () => {
     const month = currentDate.getMonth() + 1;
     const day = currentDate.getDate();
-    const dayOfWeek = ['일', '월', '화', '수', '목', '금', '토'][currentDate.getDay()];
+    const dayOfWeek = ['일', '월', '화', '수', '목', '금', '토'][
+      currentDate.getDay()
+    ];
     return `${month}/${day}(${dayOfWeek})`;
   };
 
