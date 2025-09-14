@@ -174,7 +174,7 @@ export default function CheckInMessagePage() {
 
       const messages = [
         {
-          to: customerInfo.phone,
+          to: '01057957706',
           from: from,
           text: messageText,
         },
