@@ -117,7 +117,8 @@ export default function TodayStatusPage() {
   const getCurrentDateString = () => {
     const month = currentDate.getMonth() + 1;
     const day = currentDate.getDate();
-    return `${month}/${day}`;
+    const dayOfWeek = ['일', '월', '화', '수', '목', '금', '토'][currentDate.getDay()];
+    return `${month}/${day}(${dayOfWeek})`;
   };
 
   return (
