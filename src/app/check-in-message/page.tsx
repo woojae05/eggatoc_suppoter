@@ -181,7 +181,7 @@ export default function CheckInMessagePage() {
 
       const messages = [
         {
-          to: '01057957706',
+          to: customerInfo.phone.replace(/-/g, ''),
           from: from,
           text: messageText,
         },
@@ -333,7 +333,10 @@ export default function CheckInMessagePage() {
                       {customerInfo.customer}
                     </Text>
                     <Text fontSize={{ base: '3xs', md: '2xs' }} opacity={0.7}>
-                      {customerInfo.phone}
+                      {customerInfo.phone.replace(
+                        /(\d{3})(\d{4})(\d{4})/,
+                        '$1-$2-$3'
+                      )}
                     </Text>
                   </>
                 ) : (
