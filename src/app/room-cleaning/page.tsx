@@ -35,7 +35,8 @@ import {
 } from '@chakra-ui/react';
 import { FaShare, FaCopy } from 'react-icons/fa';
 import Layout from '@/components/layout/Layout';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useMemo } from 'react';
+import { useCleaningData } from '@/hooks/useCleaningData';
 
 // 캐빈 번호 매핑
 const cabinNumberMap = {
@@ -270,13 +271,26 @@ function formatCleaningTemplate(
 }
 
 export default function RoomCleaningPage() {
-  const [loading, setLoading] = useState(false);
   const [cleaningData, setCleaningData] =
     useState<CleaningAnalysisResult | null>(null);
   const [templateText, setTemplateText] = useState('');
-  const [error, setError] = useState<string | null>(null);
   const toast = useToast();
   const { isOpen, onOpen, onClose } = useDisclosure();
+
+  // 날짜 범위 설정 (3일 전부터 3일 후까지)
+  const dateRange = useMemo(() => {
+    const today = new Date();
+    const startDate = new Date(today);
+    startDate.setDate(today.getDate() - 3);
+    const endDate = new Date(today);
+    endDate.setDate(today.getDate() + 3);
+    return { today, startDate, endDate };
+  }, []);
+
+  const { today, startDate, endDate } = dateRange;
+
+  // React Query hook
+  const { data: weekData, isLoading: loading, error, refetch } = useCleaningData(startDate, endDate);
 
   // 오늘 날짜 포맷팅 함수
   const formatDisplayDate = (date: Date): string => {
@@ -287,70 +301,42 @@ export default function RoomCleaningPage() {
     return `${month}/${day}(${dayName})`;
   };
 
-  // API 데이터 가져오기
-  const fetchCleaningData = useCallback(async () => {
-    setLoading(true);
-    setError(null);
+  // 데이터 처리
+  useEffect(() => {
+    if (weekData) {
+      try {
+        // 오늘 날짜 기준으로 분석
+        const todayStr = formatApiDate(today);
+        const displayDate = formatDisplayDate(today);
 
-    try {
-      // 오늘 날짜 기준으로 7일간 데이터 가져오기
-      const today = new Date();
-      const startDate = new Date(today);
-      startDate.setDate(today.getDate() - 3); // 3일 전부터
-      const endDate = new Date(today);
-      endDate.setDate(today.getDate() + 3); // 3일 후까지
-
-      // 환경변수에서 API 설정 가져오기
-      const baseUrl = process.env.NEXT_PUBLIC_PMS_API_BASE_URL;
-      const accommoId = process.env.NEXT_PUBLIC_ACCOMMO_ID;
-
-      if (!baseUrl || !accommoId) {
-        throw new Error(
-          'PMS API 설정이 누락되었습니다. 환경변수를 확인해주세요.'
+        // 7일 데이터에서 어제, 오늘, 내일 추출
+        const { yesterdayData, todayData, tomorrowData } = extractDayData(
+          weekData,
+          todayStr
         );
+
+        // 청소 사항 분석
+        const result = analyzeCleaningTasks(
+          yesterdayData,
+          todayData,
+          tomorrowData
+        );
+
+        // 템플릿 포맷팅
+        const template = formatCleaningTemplate(result, displayDate);
+
+        setCleaningData(result);
+        setTemplateText(template);
+      } catch (err) {
+        console.error('데이터 처리 실패:', err);
       }
+    }
+  }, [weekData, today]);
 
-      const apiUrl = `${baseUrl}/${accommoId}/schedules?startDate=${formatApiDate(
-        startDate
-      )}&endDate=${formatApiDate(endDate)}`;
-
-      console.log('API 요청:', apiUrl.replace(accommoId, '***'));
-
-      const response = await fetch(apiUrl);
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
-
-      const weekData = await response.json();
-      console.log('API 응답:', weekData);
-
-      // 오늘 날짜 기준으로 분석
-      const todayStr = formatApiDate(today);
-      const displayDate = formatDisplayDate(today);
-
-      // 7일 데이터에서 어제, 오늘, 내일 추출
-      const { yesterdayData, todayData, tomorrowData } = extractDayData(
-        weekData,
-        todayStr
-      );
-
-      // 청소 사항 분석
-      const result = analyzeCleaningTasks(
-        yesterdayData,
-        todayData,
-        tomorrowData
-      );
-
-      // 템플릿 포맷팅
-      const template = formatCleaningTemplate(result, displayDate);
-
-      setCleaningData(result);
-      setTemplateText(template);
-    } catch (err) {
-      console.error('데이터 가져오기 실패:', err);
-      const errorMessage =
-        err instanceof Error ? err.message : '알 수 없는 오류가 발생했습니다.';
-      setError(errorMessage);
+  // 에러 처리
+  useEffect(() => {
+    if (error) {
+      const errorMessage = error instanceof Error ? error.message : '데이터를 불러오는데 실패했습니다.';
       toast({
         title: '데이터 로드 실패',
         description: errorMessage,
@@ -358,10 +344,8 @@ export default function RoomCleaningPage() {
         duration: 5000,
         isClosable: true,
       });
-    } finally {
-      setLoading(false);
     }
-  }, [toast]);
+  }, [error, toast]);
 
   // 템플릿 복사 기능
   const copyTemplate = async () => {
@@ -385,10 +369,6 @@ export default function RoomCleaningPage() {
     }
   };
 
-  // 페이지 로드 시 자동으로 데이터 가져오기
-  useEffect(() => {
-    fetchCleaningData();
-  }, [fetchCleaningData]);
 
   return (
     <Layout>
@@ -419,7 +399,7 @@ export default function RoomCleaningPage() {
           <Box textAlign="center">
             <Button
               colorScheme="blue"
-              onClick={fetchCleaningData}
+              onClick={() => refetch()}
               isLoading={loading}
               loadingText="데이터 로드 중..."
               size="lg"
@@ -438,7 +418,7 @@ export default function RoomCleaningPage() {
         {error && (
           <Alert status="error" borderRadius="md">
             <AlertIcon />
-            <Text>{error}</Text>
+            <Text>{error instanceof Error ? error.message : '데이터를 불러오는데 실패했습니다.'}</Text>
           </Alert>
         )}
 

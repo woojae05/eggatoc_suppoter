@@ -23,12 +23,9 @@ import {
 import Layout from '@/components/layout/Layout';
 import { useState, useEffect, useRef } from 'react';
 import { rooms } from '@/model/rooms';
-
-import { LodgmentData } from '@/types/api';
-import {
-  fetchLodgmentData,
-  getRoomCustomerInfoForCheckin,
-} from '@/utils/apiUtils';
+import { useLodgmentData } from '@/hooks/useLodgmentData';
+import { useSendMessage } from '@/hooks/useSendMessage';
+import { getRoomCustomerInfoForCheckin } from '@/utils/apiUtils';
 
 // LocalStorage에서 오늘 날짜 키 생성
 const getTodayKey = () => {
@@ -82,52 +79,52 @@ export default function CheckInMessagePage() {
       }
     >
   >({});
-  const [apiLoading, setApiLoading] = useState(true);
   const toast = useToast();
   const { isOpen, onOpen, onClose } = useDisclosure();
   const cancelRef = useRef<HTMLButtonElement>(null);
   const [roomToSend, setRoomToSend] = useState<number | null>(null);
+  
+  // React Query hooks
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = String(today.getMonth() + 1).padStart(2, '0');
+  const day = String(today.getDate()).padStart(2, '0');
+  const dateString = `${year}-${month}-${day}`;
+  
+  const nextDay = new Date(today);
+  nextDay.setDate(nextDay.getDate() + 1);
+  const nextYear = nextDay.getFullYear();
+  const nextMonth = String(nextDay.getMonth() + 1).padStart(2, '0');
+  const nextDayOfMonth = String(nextDay.getDate()).padStart(2, '0');
+  const endDateString = `${nextYear}-${nextMonth}-${nextDayOfMonth}`;
+  
+  const { data: lodgmentData, isLoading: apiLoading, error } = useLodgmentData(dateString, endDateString);
+  const sendMessageMutation = useSendMessage();
 
-  // API 데이터 로드
+  // 고객 데이터 처리
   useEffect(() => {
-    const fetchCustomerData = async () => {
-      setApiLoading(true);
-      try {
-        const today = new Date();
-        const year = today.getFullYear();
-        const month = String(today.getMonth() + 1).padStart(2, '0');
-        const day = String(today.getDate()).padStart(2, '0');
-        const dateString = `${year}-${month}-${day}`;
+    if (lodgmentData) {
+      const roomCustomerInfo = getRoomCustomerInfoForCheckin(
+        lodgmentData,
+        dateString
+      );
+      setCustomerData(roomCustomerInfo);
+    }
+  }, [lodgmentData, dateString]);
 
-        const nextDay = new Date(today);
-        nextDay.setDate(nextDay.getDate() + 1);
-        const nextYear = nextDay.getFullYear();
-        const nextMonth = String(nextDay.getMonth() + 1).padStart(2, '0');
-        const nextDayOfMonth = String(nextDay.getDate()).padStart(2, '0');
-        const endDateString = `${nextYear}-${nextMonth}-${nextDayOfMonth}`;
-
-        const data = await fetchLodgmentData(dateString, endDateString);
-        const roomCustomerInfo = getRoomCustomerInfoForCheckin(
-          data,
-          dateString
-        );
-        setCustomerData(roomCustomerInfo);
-      } catch (error) {
-        console.error('고객 데이터 로드 실패:', error);
-        toast({
-          title: '데이터 로드 실패',
-          description: '고객 정보를 불러오는데 실패했습니다.',
-          status: 'error',
-          duration: 3000,
-          isClosable: true,
-        });
-      } finally {
-        setApiLoading(false);
-      }
-    };
-
-    fetchCustomerData();
-  }, [toast]);
+  // API 에러 처리
+  useEffect(() => {
+    if (error) {
+      console.error('고객 데이터 로드 실패:', error);
+      toast({
+        title: '데이터 로드 실패',
+        description: '고객 정보를 불러오는데 실패했습니다.',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
+    }
+  }, [error, toast]);
 
   // 컴포넌트 마운트 시 오늘 전송된 방 목록 로드
   useEffect(() => {
@@ -187,17 +184,9 @@ export default function CheckInMessagePage() {
         },
       ];
 
-      const response = await fetch('/api/send-message', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ messages }),
-      });
+      const responseData = await sendMessageMutation.mutateAsync({ messages });
 
-      const responseData = await response.json();
-
-      if (response.ok && responseData.success) {
+      if (responseData.success) {
         // 성공 시 전송 완료 상태 추가 및 LocalStorage 저장
         const newSentButtons = new Set(sentButtons).add(buttonNumber);
         setSentButtons(newSentButtons);
@@ -212,7 +201,7 @@ export default function CheckInMessagePage() {
           position: 'top',
         });
       } else {
-        throw new Error(responseData.error || '전송 실패');
+        throw new Error(responseData.message || '전송 실패');
       }
     } catch (error) {
       console.error('메시지 전송 실패:', error);

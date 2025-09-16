@@ -30,11 +30,8 @@ import {
 import { CheckIcon, ChevronLeftIcon, ChevronRightIcon } from '@chakra-ui/icons';
 import { FaBed, FaUser, FaPhone, FaUtensils } from 'react-icons/fa';
 import Layout from '@/components/layout/Layout';
-import { LodgmentData } from '@/types/api';
-import {
-  fetchLodgmentData,
-  transformApiDataToTableData,
-} from '@/utils/apiUtils';
+import { useLodgmentData } from '@/hooks/useLodgmentData';
+import { transformApiDataToTableData } from '@/utils/apiUtils';
 
 interface ReservationData {
   id: number;
@@ -48,48 +45,31 @@ interface ReservationData {
 
 export default function TodayStatusPage() {
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [apiData, setApiData] = useState<LodgmentData | null>(null);
   const [reservationData, setReservationData] = useState<ReservationData[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
-  // Fetch API data when date changes
+  // Date string calculation
+  const year = currentDate.getFullYear();
+  const month = String(currentDate.getMonth() + 1).padStart(2, '0');
+  const day = String(currentDate.getDate()).padStart(2, '0');
+  const dateString = `${year}-${month}-${day}`;
+
+  const nextDay = new Date(currentDate);
+  nextDay.setDate(nextDay.getDate() + 1);
+  const nextYear = nextDay.getFullYear();
+  const nextMonth = String(nextDay.getMonth() + 1).padStart(2, '0');
+  const nextDayOfMonth = String(nextDay.getDate()).padStart(2, '0');
+  const endDateString = `${nextYear}-${nextMonth}-${nextDayOfMonth}`;
+
+  // React Query hook
+  const { data: lodgmentData, isLoading: loading, error } = useLodgmentData(dateString, endDateString);
+
+  // Transform data when lodgment data changes
   useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      setError(null);
-
-      try {
-        const year = currentDate.getFullYear();
-        const month = String(currentDate.getMonth() + 1).padStart(2, '0');
-        const day = String(currentDate.getDate()).padStart(2, '0');
-        const dateString = `${year}-${month}-${day}`;
-
-        const nextDay = new Date(currentDate);
-        nextDay.setDate(nextDay.getDate() + 1);
-        const nextYear = nextDay.getFullYear();
-        const nextMonth = String(nextDay.getMonth() + 1).padStart(2, '0');
-        const nextDayOfMonth = String(nextDay.getDate()).padStart(2, '0');
-        const endDateString = `${nextYear}-${nextMonth}-${nextDayOfMonth}`;
-
-        const data = await fetchLodgmentData(dateString, endDateString);
-        setApiData(data);
-        // Transform API data to table format
-        const tableData = transformApiDataToTableData(data, dateString);
-        setReservationData(tableData);
-        console.log('Fetched and transformed data:', tableData);
-      } catch (err) {
-        console.error('Failed to fetch data:', err);
-        setError('데이터를 불러오는데 실패했습니다. 기본 데이터를 표시합니다.');
-        // Use empty data as fallback
-        setReservationData([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
-  }, [currentDate]);
+    if (lodgmentData) {
+      const tableData = transformApiDataToTableData(lodgmentData, dateString);
+      setReservationData(tableData);
+    }
+  }, [lodgmentData, dateString]);
 
   const headerBg = useColorModeValue('blue.50', 'blue.900');
   const hoverBg = useColorModeValue('gray.50', 'gray.700');
@@ -150,7 +130,7 @@ export default function TodayStatusPage() {
         {error && (
           <Alert status="warning" borderRadius="xl">
             <AlertIcon />
-            {error}
+{error instanceof Error ? error.message : '데이터를 불러오는데 실패했습니다.'}
           </Alert>
         )}
 

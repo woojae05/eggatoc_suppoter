@@ -21,12 +21,14 @@ import {
   FaLeaf,
   FaCoffee,
   FaCalendarDay,
+  FaClipboardList,
 } from 'react-icons/fa';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 
 const sidebarItems = [
   { icon: FaCalendarDay, label: '오늘 현황', href: '/today-status' },
+  { icon: FaClipboardList, label: '예약 관리', href: '/reservations' },
   {
     icon: FaUserCheck,
     label: '레이트 체크인 안내 메시지',

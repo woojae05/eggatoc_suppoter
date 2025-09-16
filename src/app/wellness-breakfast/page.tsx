@@ -48,43 +48,43 @@ import { useState, useEffect, useCallback } from 'react';
 // 예: target 9/7일 분석 시, 9/8 숙박자 중에서 "2명, 9/8" 서비스 요청한 사람을 찾음
 function parseDateFromValue(value: string, targetDate: string): boolean {
   const targetDateObj = new Date(targetDate);
-  
+
   // 타겟 날짜의 다음날을 계산 (서비스 제공 날짜)
   const nextDay = new Date(targetDateObj);
   nextDay.setDate(targetDateObj.getDate() + 1);
   const serviceMonth = nextDay.getMonth() + 1;
   const serviceDay = nextDay.getDate();
-  
+
   // 다양한 날짜 형태 매칭
   const datePatterns = [
-    /(\d{1,2})\/(\d{1,2})/,  // 9/8 형태
-    /(\d{1,2})월\s*(\d{1,2})일?/,  // 9월8일 또는 9월 8일 형태
-    /(\d{1,2})-(\d{1,2})/,  // 9-8 형태
+    /(\d{1,2})\/(\d{1,2})/, // 9/8 형태
+    /(\d{1,2})월\s*(\d{1,2})일?/, // 9월8일 또는 9월 8일 형태
+    /(\d{1,2})-(\d{1,2})/, // 9-8 형태
   ];
-  
+
   for (const pattern of datePatterns) {
     const match = value.match(pattern);
     if (match) {
       const formMonth = parseInt(match[1]);
       const formDay = parseInt(match[2]);
-      
-      // 강규연이 9/8 숙박하고 "9/8" 서비스 신청했다면, 
+
+      // 강규연이 9/8 숙박하고 "9/8" 서비스 신청했다면,
       // 이것은 9/7 분석에 포함되어야 함
       // 즉, 폼의 날짜가 타겟+1과 같으면 매치
       const isMatch = formMonth === serviceMonth && formDay === serviceDay;
-      
-      console.log('🔍 날짜 파싱:', { 
-        폼데이터: value, 
+
+      console.log('🔍 날짜 파싱:', {
+        폼데이터: value,
         폼날짜: `${formMonth}/${formDay}`,
         분석날짜: targetDate,
         예상서비스날짜: `${serviceMonth}/${serviceDay}`,
-        매치여부: isMatch 
+        매치여부: isMatch,
       });
-      
+
       return isMatch;
     }
   }
-  
+
   return false;
 }
 
@@ -127,7 +127,10 @@ function getSelectedDateYogaAndBreakfastCount(data: any, targetDate: string) {
                 input.value &&
                 input.value.trim() !== ''
             );
-            if (breakfastInput && parseDateFromValue(breakfastInput.value, targetDate)) {
+            if (
+              breakfastInput &&
+              parseDateFromValue(breakfastInput.value, targetDate)
+            ) {
               const match = breakfastInput.value.match(/(\d+)/);
               if (match) {
                 tempBreakfastCount = parseInt(match[1]);
@@ -137,7 +140,7 @@ function getSelectedDateYogaAndBreakfastCount(data: any, targetDate: string) {
                   분석날짜: targetDate,
                   조식인원: match[1] + '명',
                   조식날짜: breakfastInput.value,
-                  숙박일: targetDate
+                  숙박일: targetDate,
                 });
               }
             }
@@ -159,7 +162,7 @@ function getSelectedDateYogaAndBreakfastCount(data: any, targetDate: string) {
                   분석날짜: targetDate,
                   요가인원: match[1] + '명',
                   요가날짜: yogaInput.value,
-                  숙박일: targetDate
+                  숙박일: targetDate,
                 });
               }
             }
@@ -238,7 +241,10 @@ function getSelectedDateDetailedAnalysis(data: any, targetDate: string) {
                 input.value &&
                 input.value.trim() !== ''
             );
-            if (breakfastInput && parseDateFromValue(breakfastInput.value, targetDate)) {
+            if (
+              breakfastInput &&
+              parseDateFromValue(breakfastInput.value, targetDate)
+            ) {
               const match = breakfastInput.value.match(/(\d+)/);
               if (match) {
                 reservationDetail.breakfast = parseInt(match[1]);
@@ -521,7 +527,7 @@ export default function WellnessBreakfastPage() {
 
         // 환경변수에서 API 설정 가져오기
         const baseUrl = process.env.NEXT_PUBLIC_PMS_API_BASE_URL;
-        const accommoId = process.env.NEXT_PUBLIC_ACCOMMO_ID;
+        const accommoId = process.env.NEXT_PUBLIC_PMS_ACCOMO_ID;
 
         if (!baseUrl || !accommoId) {
           throw new Error(
