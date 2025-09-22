@@ -128,13 +128,22 @@ const transformApiData = (apiData: LodgmentData): Reservation[] => {
           // Debug logging to see actual IDs
           console.log('LodgmentType ID:', lodgmentType.lodgmentTypeId, 'Name:', lodgmentType.lodgmentTypeName);
           
-          // Extract room number from lodgmentTypeName (e.g., "에가톳캐빈- 1. Camino" -> "1")
-          const roomNumberMatch = lodgmentType.lodgmentTypeName.match(/(\d+)\./);
-          const roomNumber = roomNumberMatch ? roomNumberMatch[1] : '?';
+          let roomNumber = '?';
+          let roomName = lodgmentType.lodgmentTypeName;
           
-          // Extract room name from lodgmentTypeName (e.g., "에가톳캐빈- 1. Camino" -> "camino")
-          const roomNameMatch = lodgmentType.lodgmentTypeName.match(/\d+\.\s*([A-Za-z가-힣]+)/);
-          const roomName = roomNameMatch ? roomNameMatch[1].toLowerCase() : lodgmentType.lodgmentTypeName;
+          // Handle "에가톳캐빈- Wellness Retreat" pattern
+          if (lodgmentType.lodgmentTypeName.includes('Wellness Retreat')) {
+            roomNumber = 'WR';
+            roomName = 'wellness retreat';
+          } else {
+            // Extract room number from lodgmentTypeName (e.g., "에가톳캐빈- 1. Camino" -> "1")
+            const roomNumberMatch = lodgmentType.lodgmentTypeName.match(/(\d+)\./);
+            roomNumber = roomNumberMatch ? roomNumberMatch[1] : '?';
+            
+            // Extract room name from lodgmentTypeName (e.g., "에가톳캐빈- 1. Camino" -> "camino")
+            const roomNameMatch = lodgmentType.lodgmentTypeName.match(/\d+\.\s*([A-Za-z가-힣]+)/);
+            roomName = roomNameMatch ? roomNameMatch[1].toLowerCase() : lodgmentType.lodgmentTypeName;
+          }
 
           const reservation: Reservation = {
             id: apiReservation.id,

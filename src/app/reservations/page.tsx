@@ -49,6 +49,18 @@ export default function ReservationsPage() {
     });
   };
 
+  // 예약 ID 기준으로 중복 제거하는 함수
+  const deduplicateReservations = (reservations: Reservation[]): Reservation[] => {
+    const seen = new Set<string>();
+    return reservations.filter(reservation => {
+      if (seen.has(reservation.id)) {
+        return false;
+      }
+      seen.add(reservation.id);
+      return true;
+    });
+  };
+
   // 텍스트 형식 생성
   const generateReservationText = () => {
     const today = new Date();
@@ -58,15 +70,16 @@ export default function ReservationsPage() {
 
     const todayData = getTodayReservations();
 
-    const checkInList = todayData.filter((r) => r.status === 'checkIn');
-    const checkOutList = todayData.filter((r) => r.status === 'checkOut');
-    const stayingList = todayData.filter((r) => r.status === 'staying');
+    // 중복 제거
+    const checkInList = deduplicateReservations(todayData.filter((r) => r.status === 'checkIn'));
+    const checkOutList = deduplicateReservations(todayData.filter((r) => r.status === 'checkOut'));
+    const stayingList = deduplicateReservations(todayData.filter((r) => r.status === 'staying'));
 
     // 주간 현황 데이터 생성 (오늘 이후 예약들)
-    const weeklyData = reservations.filter((r) => {
+    const weeklyData = deduplicateReservations(reservations.filter((r) => {
       const checkInDate = new Date(r.checkIn);
       return checkInDate > today && r.status === 'upcoming';
-    });
+    }));
 
     const groupedWeekly = weeklyData.reduce((acc, reservation) => {
       const date = reservation.checkIn;
