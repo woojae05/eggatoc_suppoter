@@ -100,13 +100,17 @@ const transformApiData = (apiData: LodgmentData): Reservation[] => {
           const checkOutDate = new Date(apiReservation.checkOut);
           const nights = Math.ceil((checkOutDate.getTime() - checkInDate.getTime()) / (1000 * 60 * 60 * 24));
           
-          // 상태 결정 로직
+          // 상태 결정 로직 (날짜만 비교하도록 개선)
+          const todayDateOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+          const checkInDateOnly = new Date(checkInDate.getFullYear(), checkInDate.getMonth(), checkInDate.getDate());
+          const checkOutDateOnly = new Date(checkOutDate.getFullYear(), checkOutDate.getMonth(), checkOutDate.getDate());
+          
           let status: Reservation['status'] = 'upcoming';
-          if (checkInDate.toDateString() === today.toDateString()) {
+          if (checkInDateOnly.getTime() === todayDateOnly.getTime()) {
             status = 'checkIn';
-          } else if (checkOutDate.toDateString() === today.toDateString()) {
+          } else if (checkOutDateOnly.getTime() === todayDateOnly.getTime()) {
             status = 'checkOut';
-          } else if (checkInDate < today && checkOutDate > today) {
+          } else if (checkInDateOnly < todayDateOnly && checkOutDateOnly > todayDateOnly) {
             status = 'staying';
           }
           

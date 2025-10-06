@@ -149,7 +149,7 @@ function analyzeCleaningTasks(
             reservation.additionalOptions?.length > 0,
           options: [
             ...(reservation.addPersonOptions?.map((opt: any) => opt.age) || []),
-            ...(reservation.additionalOptions?.map((opt: any) => opt.title) ||
+            ...(reservation.additionalOptions?.map((opt: any) => opt?.title).filter(Boolean) ||
               []),
           ],
         };
